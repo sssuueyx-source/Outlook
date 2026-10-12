@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="收件匣">
+<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>收件匣</title>
+<style>
+/* Layout: phone-style mail client — header + tabs, grouped conversation list, conversation view with expandable messages, bottom nav */
+:root{
+  --bg:#ffffff; --bar:#f5f6f8; --line:#e4e6ea; --seg:#e6e8ec; --seg-on:#ffffff;
+  --fg:#1b1b1f; --muted:#6b6f78; --accent:#0f6cbd; --badge:#eceef1; --card:#ffffff;
+  --font:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#000000; --bar:#1c1c1e; --line:#2c2c2e; --seg:#2a2a2c; --seg-on:#3a3a3d;
+  --fg:#f2f2f4; --muted:#9a9aa1; --accent:#4f9ff0; --badge:#2c2c2e; --card:#141416; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000; --bar:#1c1c1e; --line:#2c2c2e; --seg:#2a2a2c; --seg-on:#3a3a3d;
+  --fg:#f2f2f4; --muted:#9a9aa1; --accent:#4f9ff0; --badge:#2c2c2e; --card:#141416; color-scheme:dark}
+html,body{height:100%;margin:0;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+body{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+svg{display:block}
+
+.app{height:100%;max-width:640px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);position:relative}
+.view{flex:1;display:flex;flex-direction:column;min-height:0}
+.scroll{flex:1;overflow:auto;min-height:0}
+
+/* list header */
+.hdr{background:var(--bar);padding:calc(14px + env(safe-area-inset-top,0px)) 16px 12px}
+.hdr-row{display:flex;align-items:center;gap:12px}
+.hdr h1{font-size:28px;font-weight:700;margin:0;flex:1}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;color:var(--fg)}
+.tabs-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.seg{display:flex;background:var(--seg);border-radius:999px;padding:3px}
+.seg button{padding:6px 16px;border-radius:999px;font-size:16px;color:var(--fg)}
+.seg button.on{background:var(--seg-on);font-weight:700}
+.filter{display:flex;align-items:center;gap:6px;font-size:16px}
+
+.group{padding:18px 16px 6px;color:var(--muted);font-size:15px}
+.conv{display:grid;grid-template-columns:44px 1fr;gap:12px;padding:12px 16px;width:100%;text-align:left;border-bottom:1px solid var(--line)}
+.conv:active{background:var(--bar)}
+.c-main{min-width:0;display:grid;grid-template-columns:1fr auto;gap:2px 8px}
+.c-from{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.c-time{font-size:14px;color:var(--muted);align-self:center}
+.c-subj{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.c-meta{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.count{background:var(--badge);border-radius:6px;font-size:13px;padding:1px 7px;color:var(--muted);font-variant-numeric:tabular-nums}
+.c-prev{grid-column:1/3;color:var(--muted);font-size:14px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.conv.unread .c-from{font-weight:700}
+.conv.unread .c-subj{color:var(--accent);font-weight:700}
+.conv{position:relative}
+.conv.unread::before{content:"";position:absolute;left:4px;top:50%;width:4px;height:36px;margin-top:-18px;border-radius:2px;background:var(--accent)}
+.m-body a{color:var(--accent);overflow-wrap:anywhere}
+.empty{padding:60px 24px;text-align:center;color:var(--muted)}
+.more{display:block;padding:18px 16px;color:var(--accent);font-size:16px}
+
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:16px;flex:none}
+.av.sm{width:36px;height:36px;font-size:14px}
+.av.me{background:#3b7fd4}
+.av.y{background:#4a90d9}
+
+/* conversation view */
+.thdr{background:var(--bar);padding:calc(10px + env(safe-area-inset-top,0px)) 8px 14px;display:flex;flex-direction:column;gap:8px}
+.thdr .bar{display:flex;align-items:center;justify-content:space-between}
+.thdr h2{margin:0 8px;font-size:19px;line-height:1.45;font-weight:700;text-wrap:balance}
+.msgs{display:flex;flex-direction:column}
+.msg{border-bottom:8px solid var(--bar)}
+.msg:last-child{border-bottom:0}
+.m-head{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:start;width:100%;text-align:left;padding:16px 16px 8px}
+.m-who{min-width:0}
+.m-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-to,.m-prev{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-time{color:var(--muted);font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.msg.open .m-prev{display:none}
+.msg:not(.open) .m-to{display:none}
+.m-body{display:none;padding:4px 16px 16px 58px;line-height:1.85;font-size:15px}
+.msg.open .m-body{display:block}
+.m-body p{margin:0 0 12px;overflow-wrap:anywhere}
+.attach{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.attach span{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px}
+.tag{font-size:12px;color:var(--accent);margin-left:6px;font-weight:400}
+
+/* bottom nav + fab */
+.fab{position:absolute;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:16px;background:var(--bar);border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.nav{display:grid;grid-template-columns:repeat(3,1fr);background:var(--bar);border-top:1px solid var(--line);padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px))}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.nav button.on{color:var(--accent)}
+.toast{position:absolute;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:13px;white-space:nowrap}
+@media (max-width:360px){.m-body{padding-left:16px}}
+@media (prefers-reduced-motion:no-preference){.msg{transition:border-color .15s}}
+</style>
+
+</head>
+<body>
+<div class="app" id="app">
+  <section class="view" id="listView">
+    <header class="hdr">
+      <div class="hdr-row">
+        <span class="av sm me">SS</span>
+        <h1>收件匣</h1>
+        <button class="icon-btn" aria-label="通知"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></button>
+        <button class="icon-btn" aria-label="搜尋"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></button>
+      </div>
+      <div class="tabs-row">
+        <div class="seg" role="tablist">
+          <button class="on" id="tabFocus" role="tab" aria-selected="true">焦點</button>
+          <button id="tabOther" role="tab" aria-selected="false">其他</button>
+        </div>
+        <button class="filter"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"/></svg>篩選</button>
+      </div>
+    </header>
+    <div class="scroll" id="list"></div>
+  </section>
+
+  <section class="view" id="threadView" hidden>
+    <header class="thdr">
+      <div class="bar">
+        <button class="icon-btn" id="back" aria-label="返回收件匣"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button>
+        <button class="icon-btn" aria-label="更多"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+      </div>
+      <h2 id="tSubj"></h2>
+    </header>
+    <div class="scroll"><div class="msgs" id="msgs"></div></div>
+  </section>
+
+  <button class="fab" id="fab" aria-label="新增郵件"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M13 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M18.5 3.5a2.1 2.1 0 0 1 3 3L13 15l-4 1 1-4z"/></svg></button>
+
+  <nav class="nav">
+    <button class="on" id="navMail"><svg width="30" height="24" viewBox="0 0 30 24"><rect x="1" y="2" width="28" height="20" rx="3" fill="currentColor"/><path d="M2 5l13 9 13-9" fill="none" stroke="var(--bar)" stroke-width="2"/></svg>郵件</button>
+    <button class="soon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9h18M8 2v4M16 2v4"/><text x="12" y="18.5" font-size="8" text-anchor="middle" fill="currentColor" stroke="none" font-family="system-ui">13</text></svg>行事曆</button>
+    <button class="soon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>應用程式</button>
+  </nav>
+</div>
+
+<script>
+const B = [["横浜国立大学\n大学院環境情報研究院\n安本雅典先生", "突然のご連絡、失礼いたします。\n台湾出身のSu Fang Yi（蘇芳儀）と申します。2027年4月入学の大学院先進実践学環を志望しており、先生のご指導を仰ぎたく、ご連絡いたしました。", "私はこれまで約7年間、半導体IC設計業界において、プロジェクト管理およびマーケティングの業務に携わってまいりました。社外との窓口を担う立場として、業界特有の現象や、企業間の協業に伴うさまざまな矛盾をはらんだ難しさを数多く目にしてきました。先生のご研究からは大変多くの示唆をいただきました。とりわけ「オープン技術のガバナンスの研究：協調的標準化に関わる技術のコントロールの実証分析」を拝読し、実務の中で感じていた問題を、より体系的に捉えられるようになりました。そこで、先生のご指導のもと、実務で直面してきた問題を整理・分析したいと考えるようになりました。", "前職の会社は主に電源管理ICを設計しており、その製品は多くの最終製品に欠かせない実装支援部品です。一方で、同時に複数の顧客を支援しており、顧客たちが競合関係にあるため、重要な情報は意図的に一部しか開示されません。そのため、顧客の要求に合わせて製品を開発する際、情報が不足したまま進めざるを得ないことが多く、手戻りや開発の遅延がたびたび発生しておりました。", "そこで研究したい内容は、協調的標準化における技術のコントロールという先生の視点を手がかりに、分析の視点を実装支援企業に移し、こうした企業が情報不足という制約の下でどのように知識を構築していくのかを明らかにしたいと考えております。研究題目は以下のとおりです。", "　「複数の競合陣営の交差点に立つ実装支援企業の知識構築──NAND産業の事例分析」", "以下の資料を添付いたします。ご多忙のところ大変恐縮ですが、お目通しいただき、研究の方向性についてご意見を賜れましたら幸いです。", "・研究計画書（スライド版）\n・研究計画書（文書版）\n・履歴書", "なお、私は学士の学位を有していないため、出願に先立ち出願資格審査を受ける必要がございます。審査の申請は、近日中に私の方で先に提出いたします。あらかじめご報告申し上げます。", "また、もし可能でしたら、来週、先生の研究室へご挨拶に伺うことはできませんでしょうか。日時は先生のご都合に合わせます。来週のご都合が難しい場合は、別の日程やオンラインでのご面談でも構いません。", "ご多忙のところ、重ねてのお願いで大変恐縮ですが、何卒よろしくお願い申し上げます。", "――――――――――\nSu Fang Yi（蘇芳儀）\nEmail：suesu55@outlook.com\n電話：090-5138-6955\n――――――――――"], ["蘇芳儀さん", "貴信、拝受しました。承知しました。", "内容的には受け入れ可能かと思いますので、面談させていただけますでしょうか。対面の方が良いようであれば、来週ですと10月14日14～17時の間、30分程度、ご都合はいかがでしょうか。", "ご検討ください。", "安本", "***\n安本 雅典\n国立大学法人　横浜国立大学\n大学院環境情報研究院・学府　経営学部\n総合学術高等研究院（IMS）\ntel.: 045-339-3794\ne-mail: yasumoto-masanori-ky@ynu.ac.jp\n関連URL: https://er-web.ynu.ac.jp/html/YASUMOTO_Masanori/ja.html"], ["安本先生", "夜分遅くに失礼いたします。\nご返信ありがとうございました。\n受け入れ可能ということで、大変嬉しく思います。", "10月14日、14時からお願いできますでしょうか。対面での面談を希望しておりますが、どちらに伺えばよろしいでしょうか。\n当日、どうぞよろしくお願いいたします。", "お忙しいところ、お時間をいただきありがとうございます。\n何卒よろしくお願いいたします。", "蘇 芳儀\n――――――――――\nSu Fang Yi（蘇芳儀）\nEmail：suesu55@outlook.com\n電話：090-5138-6955\n――――――――――"]];
+const SUBJ = "【研究指導のご相談】2027年4月入学希望先進実践学環・社会人特別選抜_Su Fang Yi（蘇芳儀）";
+const ME = {name:"Su Fang Yi", ini:"SS", color:"#3b7fd4"};
+const Y  = {name:"yasumoto-masanori-ky@ynu.ac.jp", ini:"Y", color:"#4a90d9"};
+const SIG_Y = "***\n安本 雅典\n国立大学法人　横浜国立大学\n大学院環境情報研究院・学府　経営学部\n総合学術高等研究院（IMS）\ntel.: 045-339-3794\ne-mail: yasumoto-masanori-ky@ynu.ac.jp\n関連URL: https://er-web.ynu.ac.jp/html/YASUMOTO_Masanori/ja.html";
+const B4 = ["蘇さん","承知しました。以下の場所にお願いできますでしょうか。",
+ "環境情報S棟5階508（わたしの研究室です。手前に事務室がありますが直接お出でください）",
+ "以下のキャンパスマップでは、左上のS9とある紫の建物（入り口は共通）になります。\nhttps://www.ynu.ac.jp/access/map_campus.html",
+ "ここへのアクセスについては、バス利用の場合、同じく地図上右上にある「国大西」か「釜台住宅第2」が最寄りのバス停になります。これらのバス停へのアクセスについては、以下のサイトをご覧ください。最寄りの目安となる門は「西門」です。",
+ "https://www.ynu.ac.jp/access/index.html",
+ "「国大西」は学内乗り入れバスのバス停で案内が下記サイトに記載されていますが、「釜台住宅第2」については経路の異なる別系統のバス（9番バス乗り場の浜11系統）になります。",
+ "何かありましたら、下記の電話番号か、080-7896‐5775までお願いします。","安本",SIG_Y];
+const P = (name,ini,color)=>({name,ini,color});
+const CHEN = P("陳 怡君","陳","#0f766e"), LIN = P("林 志明","林","#7c3aed"), IT = P("IT 服務台","IT","#b45309"),
+      NEWS = P("旅途電子報","旅","#be123c"), SEM = P("產業講座報名系統","講","#4d7c0f");
+const convs = [
+  {id:2, focus:true, group:"昨天", listTime:"下午 6:40", subj:"Q4 日本客戶拜訪名單確認", unread:true, msgs:[
+    {from:CHEN, to:"Su Fang Yi", time:"10/12（週一）18:40", body:["Sue 你好，","附上 Q4 日本客戶拜訪名單草稿，共 8 家。麻煩幫忙確認優先順序，特別是兩家新接觸的 Tier-2 客戶。","若週四前能回覆，我就可以先跟業務端排行程。","謝謝！\n怡君"], attach:["Q4_visit_list.xlsx"]}]},
+  {id:1, focus:true, group:"上週", listTime:"星期五", subj:SUBJ, replied:true, msgs:[
+    {from:ME, to:"yasumoto-masanori-ky@ynu.ac.jp", time:"10/8（週四）14:00", body:B[0],
+     attach:["研究計画書（スライド版）","研究計画書（文書版）","履歴書"]},
+    {from:Y, to:"Su Fang Yi", time:"10/8（週四）21:56", body:B[1]},
+    {from:ME, to:"yasumoto-masanori-ky@ynu.ac.jp", time:"10/8（週四）22:20", body:B[2]},
+    {from:Y, to:"Su Fang Yi", time:"10/9（週五）21:12", body:B4}]},
+  {id:3, focus:true, group:"上週", listTime:"星期三", subj:"新產品發表簡報 v3 已上傳", msgs:[
+    {from:LIN, to:"Su Fang Yi；產品行銷團隊", time:"10/7（週三）15:22", body:["各位好，","簡報第三版已上傳到共用資料夾，主要修改：\n1. 競品比較頁更新為最新規格\n2. 日本市場頁補上兩個導入案例","請在週五前留言回饋。","志明"]}]},
+  {id:4, focus:true, group:"上個月", listTime:"2026/09/28", subj:"系統維護通知：10/3（六）02:00–06:00", msgs:[
+    {from:IT, to:"全體同仁", time:"9/28（週一）09:00", body:["各位同仁好，","本週六凌晨將進行郵件伺服器例行維護，期間無法收發郵件。如有緊急事務請改用電話聯繫。","IT 服務台"]}]},
+  {id:5, focus:false, group:"上週", listTime:"星期六", subj:"秋季京都・金澤 5 日遊早鳥優惠開跑", unread:true, msgs:[
+    {from:NEWS, to:"Su Fang Yi", time:"10/10（週六）10:00", body:["Sue 您好，","秋季楓葉行程早鳥優惠已開放報名，10/31 前預訂享九折。","本期精選：京都嵐山、金澤兼六園、白川鄉合掌村。","如不想再收到本電子報，可於會員頁面取消訂閱。"]}]},
+  {id:6, focus:false, group:"上個月", listTime:"2026/09/30", subj:"報名成功：半導體供應鏈趨勢線上講座", msgs:[
+    {from:SEM, to:"Su Fang Yi", time:"9/30（週三）12:05", body:["您好，","您已成功報名「半導體供應鏈趨勢與企業協作」線上講座。","日期：10/20（週二）19:30–21:00\n連結將於講座前一天寄出。","此為系統自動發送郵件，請勿直接回覆。"]}]}
+];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const flat = b => b.join(" ").replace(/\n/g," ");
+let tab = "focus";
+
+function renderList(){
+  const items = convs.filter(c => (tab==="focus") === c.focus);
+  if(!items.length){ $("list").innerHTML = '<div class="empty">這裡沒有郵件</div>'; return; }
+  let html = "", g = null;
+  items.forEach(c=>{
+    if(c.group!==g){ g=c.group; html += `<div class="group">${esc(g)}</div>`; }
+    const lastIn = [...c.msgs].reverse().find(m=>m.from!==ME) || c.msgs[c.msgs.length-1];
+    html += `<button class="conv${c.unread?" unread":""}" data-id="${c.id}">
+      <span class="av" style="background:${lastIn.from.color}">${esc(lastIn.from.ini)}</span>
+      <span class="c-main">
+        <span class="c-from">${esc(lastIn.from.name)}</span><span class="c-time">${esc(c.listTime)}</span>
+        <span class="c-subj">${esc(c.subj)}</span>
+        <span class="c-meta">${c.replied?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="已回覆"><path d="M9 7 4 12l5 5"/><path d="M4 12h10a6 6 0 0 1 6 6"/></svg>':""}${c.msgs.length>1?`<span class="count">${c.msgs.length}</span>`:""}</span>
+        <span class="c-prev">${esc(flat(lastIn.body))}</span>
+      </span></button>`;
+  });
+  html += '<span class="more">載入更多交談</span>';
+  $("list").innerHTML = html;
+}
+
+function openConv(id){
+  const c = convs.find(x=>x.id===id);
+  c.unread = false; renderList();
+  $("tSubj").textContent = c.subj;
+  $("msgs").innerHTML = c.msgs.map((m,i)=>`
+    <article class="msg open">
+      <div class="m-head">
+        <span class="av sm" style="background:${m.from.color}">${esc(m.from.ini)}</span>
+        <span class="m-who">
+          <span class="m-name" style="display:block">${esc(m.from.name)}${m.from===ME?'<span class="tag">已傳送</span>':""}</span>
+          <span class="m-to" style="display:block">收件者：${esc(m.to)}</span>
+          <span class="m-prev" style="display:block">${esc(flat(m.body))}</span>
+        </span>
+        <span class="m-time">${esc(m.time)}</span>
+      </div>
+      <div class="m-body">${m.body.map(p=>`<p>${esc(p).replace(/https?:\/\/[^\s<（）]+/g,u=>`<a href="${u}" target="_blank" rel="noopener">${u}</a>`).replace(/\n/g,"<br>")}</p>`).join("")}
+        ${m.attach?`<div class="attach">${m.attach.map(a=>`<span>📎 ${esc(a)}</span>`).join("")}</div>`:""}
+      </div>
+    </article>`).join("");
+  $("listView").hidden = true; $("threadView").hidden = false; $("fab").hidden = true;
+  $("threadView").querySelector(".scroll").scrollTop = 0;
+}
+
+$("list").onclick = e => { const b=e.target.closest(".conv"); if(b) openConv(+b.dataset.id); };
+$("back").onclick = () => { $("threadView").hidden = true; $("listView").hidden = false; $("fab").hidden = false; };
+$("navMail").onclick = () => $("back").onclick();
+$("tabFocus").onclick = () => setTab("focus");
+$("tabOther").onclick = () => setTab("other");
+function setTab(t){ tab=t; $("tabFocus").classList.toggle("on",t==="focus"); $("tabOther").classList.toggle("on",t==="other");
+  $("tabFocus").setAttribute("aria-selected",t==="focus"); $("tabOther").setAttribute("aria-selected",t==="other"); renderList(); }
+renderList();
+</script>
+
+</body>
+</html>
