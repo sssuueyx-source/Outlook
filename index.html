@@ -1,18 +1,4 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="收件匣">
-<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="icon" href="icon-192.png">
-<title>收件匣</title>
+<!doctype html><html lang="zh-Hant"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>收件匣閱讀器</title></head><body>
 <style>
 /* Layout: phone-style mail client — header + tabs, grouped conversation list, conversation view with expandable messages, bottom nav */
 :root{
@@ -26,10 +12,7 @@
 :root[data-theme="dark"]{
   --bg:#000000; --bar:#1c1c1e; --line:#2c2c2e; --seg:#2a2a2c; --seg-on:#3a3a3d;
   --fg:#f2f2f4; --muted:#9a9aa1; --accent:#4f9ff0; --badge:#2c2c2e; --card:#141416; color-scheme:dark}
-html,body{height:100%;margin:0;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
-body{-webkit-text-size-adjust:100%}
-[hidden]{display:none!important}
-img{max-width:100%}
+html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px}
 *{box-sizing:border-box}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
@@ -41,7 +24,7 @@ svg{display:block}
 .scroll{flex:1;overflow:auto;min-height:0}
 
 /* list header */
-.hdr{background:var(--bar);padding:calc(14px + env(safe-area-inset-top,0px)) 16px 12px}
+.hdr{background:var(--bar);padding:14px 16px 12px}
 .hdr-row{display:flex;align-items:center;gap:12px}
 .hdr h1{font-size:28px;font-weight:700;margin:0;flex:1}
 .icon-btn{width:36px;height:36px;display:grid;place-items:center;color:var(--fg)}
@@ -75,7 +58,7 @@ svg{display:block}
 .av.y{background:#4a90d9}
 
 /* conversation view */
-.thdr{background:var(--bar);padding:calc(10px + env(safe-area-inset-top,0px)) 8px 14px;display:flex;flex-direction:column;gap:8px}
+.thdr{background:var(--bar);padding:10px 8px 14px;display:flex;flex-direction:column;gap:8px}
 .thdr .bar{display:flex;align-items:center;justify-content:space-between}
 .thdr h2{margin:0 8px;font-size:19px;line-height:1.45;font-weight:700;text-wrap:balance}
 .msgs{display:flex;flex-direction:column}
@@ -105,8 +88,6 @@ svg{display:block}
 @media (prefers-reduced-motion:no-preference){.msg{transition:border-color .15s}}
 </style>
 
-</head>
-<body>
 <div class="app" id="app">
   <section class="view" id="listView">
     <header class="hdr">
@@ -142,13 +123,14 @@ svg{display:block}
 
   <nav class="nav">
     <button class="on" id="navMail"><svg width="30" height="24" viewBox="0 0 30 24"><rect x="1" y="2" width="28" height="20" rx="3" fill="currentColor"/><path d="M2 5l13 9 13-9" fill="none" stroke="var(--bar)" stroke-width="2"/></svg>郵件</button>
-    <button class="soon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9h18M8 2v4M16 2v4"/><text x="12" y="18.5" font-size="8" text-anchor="middle" fill="currentColor" stroke="none" font-family="system-ui">13</text></svg>行事曆</button>
+    <button class="soon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9h18M8 2v4M16 2v4"/><text x="12" y="18.5" font-size="8" text-anchor="middle" fill="currentColor" stroke="none" font-family="system-ui">20</text></svg>行事曆</button>
     <button class="soon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>應用程式</button>
   </nav>
+  <div class="toast" id="toast" hidden></div>
 </div>
 
 <script>
-const B = [["横浜国立大学\n大学院環境情報研究院\n安本雅典先生", "突然のご連絡、失礼いたします。\n台湾出身のSu Fang Yi（蘇芳儀）と申します。2027年4月入学の大学院先進実践学環を志望しており、先生のご指導を仰ぎたく、ご連絡いたしました。", "私はこれまで約7年間、半導体IC設計業界において、プロジェクト管理およびマーケティングの業務に携わってまいりました。社外との窓口を担う立場として、業界特有の現象や、企業間の協業に伴うさまざまな矛盾をはらんだ難しさを数多く目にしてきました。先生のご研究からは大変多くの示唆をいただきました。とりわけ「オープン技術のガバナンスの研究：協調的標準化に関わる技術のコントロールの実証分析」を拝読し、実務の中で感じていた問題を、より体系的に捉えられるようになりました。そこで、先生のご指導のもと、実務で直面してきた問題を整理・分析したいと考えるようになりました。", "前職の会社は主に電源管理ICを設計しており、その製品は多くの最終製品に欠かせない実装支援部品です。一方で、同時に複数の顧客を支援しており、顧客たちが競合関係にあるため、重要な情報は意図的に一部しか開示されません。そのため、顧客の要求に合わせて製品を開発する際、情報が不足したまま進めざるを得ないことが多く、手戻りや開発の遅延がたびたび発生しておりました。", "そこで研究したい内容は、協調的標準化における技術のコントロールという先生の視点を手がかりに、分析の視点を実装支援企業に移し、こうした企業が情報不足という制約の下でどのように知識を構築していくのかを明らかにしたいと考えております。研究題目は以下のとおりです。", "　「複数の競合陣営の交差点に立つ実装支援企業の知識構築──NAND産業の事例分析」", "以下の資料を添付いたします。ご多忙のところ大変恐縮ですが、お目通しいただき、研究の方向性についてご意見を賜れましたら幸いです。", "・研究計画書（スライド版）\n・研究計画書（文書版）\n・履歴書", "なお、私は学士の学位を有していないため、出願に先立ち出願資格審査を受ける必要がございます。審査の申請は、近日中に私の方で先に提出いたします。あらかじめご報告申し上げます。", "また、もし可能でしたら、来週、先生の研究室へご挨拶に伺うことはできませんでしょうか。日時は先生のご都合に合わせます。来週のご都合が難しい場合は、別の日程やオンラインでのご面談でも構いません。", "ご多忙のところ、重ねてのお願いで大変恐縮ですが、何卒よろしくお願い申し上げます。", "――――――――――\nSu Fang Yi（蘇芳儀）\nEmail：suesu55@outlook.com\n電話：090-5138-6955\n――――――――――"], ["蘇芳儀さん", "貴信、拝受しました。承知しました。", "内容的には受け入れ可能かと思いますので、面談させていただけますでしょうか。対面の方が良いようであれば、来週ですと10月14日14～17時の間、30分程度、ご都合はいかがでしょうか。", "ご検討ください。", "安本", "***\n安本 雅典\n国立大学法人　横浜国立大学\n大学院環境情報研究院・学府　経営学部\n総合学術高等研究院（IMS）\ntel.: 045-339-3794\ne-mail: yasumoto-masanori-ky@ynu.ac.jp\n関連URL: https://er-web.ynu.ac.jp/html/YASUMOTO_Masanori/ja.html"], ["安本先生", "夜分遅くに失礼いたします。\nご返信ありがとうございました。\n受け入れ可能ということで、大変嬉しく思います。", "10月14日、14時からお願いできますでしょうか。対面での面談を希望しておりますが、どちらに伺えばよろしいでしょうか。\n当日、どうぞよろしくお願いいたします。", "お忙しいところ、お時間をいただきありがとうございます。\n何卒よろしくお願いいたします。", "蘇 芳儀\n――――――――――\nSu Fang Yi（蘇芳儀）\nEmail：suesu55@outlook.com\n電話：090-5138-6955\n――――――――――"]];
+const B = [["横浜国立大学\n大学院環境情報研究院\n安本雅典先生", "突然のご連絡、失礼いたします。\n台湾出身のSu Fang Yi（蘇芳儀）と申します。2027年4月入学の大学院先進実践学環を志望しており、先生のご指導を仰ぎたく、ご連絡いたしました。", "私はこれまで約7年間、半導体IC設計業界において、プロジェクト管理およびマーケティングの業務に携わってまいりました。社外との窓口を担う立場として、業界特有の現象や、企業間の協業に伴うさまざまな矛盾をはらんだ難しさを数多く目にしてきました。先生のご研究からは大変多くの示唆をいただきました。とりわけ「オープン技術のガバナンスの研究：協調的標準化に関わる技術のコントロールの実証分析」を拝読し、実務の中で感じていた問題を、より体系的に捉えられるようになりました。そこで、先生のご指導のもと、実務で直面してきた問題を整理・分析したいと考えるようになりました。", "前職の会社は主に電源管理ICを設計しており、その製品は多くの最終製品に欠かせない実装支援部品です。一方で、同時に複数の顧客を支援しており、顧客たちが競合関係にあるため、重要な情報は意図的に一部しか開示されません。そのため、顧客の要求に合わせて製品を開発する際、情報が不足したまま進めざるを得ないことが多く、手戻りや開発の遅延がたびたび発生しておりました。", "そこで研究したい内容は、協調的標準化における技術のコントロールという先生の視点を手がかりに、分析の視点を実装支援企業に移し、こうした企業が情報不足という制約の下でどのように知識を構築していくのかを明らかにしたいと考えております。研究題目は以下のとおりです。", "　「複数の競合陣営の交差点に立つ実装支援企業の知識構築──NAND産業の事例分析」", "以下の資料を添付いたします。ご多忙のところ大変恐縮ですが、お目通しいただき、研究の方向性についてご意見を賜れましたら幸いです。", "・研究計画書（スライド版）\n・研究計画書（文書版）\n・履歴書", "なお、私は学士の学位を有していないため、出願に先立ち出願資格審査を受ける必要がございます。審査の申請は、近日中に私の方で先に提出いたします。あらかじめご報告申し上げます。", "また、もし可能でしたら、来週、先生の研究室へご挨拶に伺うことはできませんでしょうか。日時は先生のご都合に合わせます。来週のご都合が難しい場合は、別の日程やオンラインでのご面談でも構いません。", "ご多忙のところ、重ねてのお願いで大変恐縮ですが、何卒よろしくお願い申し上げます。", "――――――――――\nSu Fang Yi（蘇芳儀）\nEmail：suesu55@outlook.com\n電話：090-5138-6955\n――――――――――"], ["蘇芳儀さん", "貴信、拝受しました。承知しました。", "内容的には受け入れ可能かと思いますので、面談させていただけますでしょうか。\nなお、恐縮ですが、今後出張が入る可能性があり、出願前に面談できる日程が来週に限られる可能性がございます。", "対面の方が良いようであれば、来週ですと10月14日13～17時の間、30分程度、ご都合はいかがでしょうか。（オンラインがご希望であれば、また異なる日時での設定も可能です）。", "ご検討ください。", "安本", "***\n安本 雅典\n国立大学法人　横浜国立大学\n大学院環境情報研究院・学府　経営学部\n総合学術高等研究院（IMS）\ntel.: 045-339-3794\ne-mail: yasumoto-masanori-ky@ynu.ac.jp\n関連URL: https://er-web.ynu.ac.jp/html/YASUMOTO_Masanori/ja.html"], ["安本先生", "夜分遅くに失礼いたします。\nご返信ありがとうございました。\n受け入れ可能ということで、大変嬉しく思います。", "10月14日、14時からお願いできますでしょうか。対面での面談を希望しておりますが、どちらに伺えばよろしいでしょうか。\n当日、どうぞよろしくお願いいたします。", "お忙しいところ、お時間をいただきありがとうございます。\n何卒よろしくお願いいたします。", "蘇 芳儀\n――――――――――\nSu Fang Yi（蘇芳儀）\nEmail：suesu55@outlook.com\n電話：090-5138-6955\n――――――――――"]];
 const SUBJ = "【研究指導のご相談】2027年4月入学希望先進実践学環・社会人特別選抜_Su Fang Yi（蘇芳儀）";
 const ME = {name:"Su Fang Yi", ini:"SS", color:"#3b7fd4"};
 const Y  = {name:"yasumoto-masanori-ky@ynu.ac.jp", ini:"Y", color:"#4a90d9"};
@@ -163,22 +145,35 @@ const B4 = ["蘇さん","承知しました。以下の場所にお願いでき�
 const P = (name,ini,color)=>({name,ini,color});
 const CHEN = P("陳 怡君","陳","#0f766e"), LIN = P("林 志明","林","#7c3aed"), IT = P("IT 服務台","IT","#b45309"),
       NEWS = P("旅途電子報","旅","#be123c"), SEM = P("產業講座報名系統","講","#4d7c0f");
+const WANG = P("王 俊傑","王","#1d4ed8");
 const convs = [
-  {id:2, focus:true, group:"昨天", listTime:"下午 6:40", subj:"Q4 日本客戶拜訪名單確認", unread:true, msgs:[
-    {from:CHEN, to:"Su Fang Yi", time:"10/12（週一）18:40", body:["Sue 你好，","附上 Q4 日本客戶拜訪名單草稿，共 8 家。麻煩幫忙確認優先順序，特別是兩家新接觸的 Tier-2 客戶。","若週四前能回覆，我就可以先跟業務端排行程。","謝謝！\n怡君"], attach:["Q4_visit_list.xlsx"]}]},
-  {id:1, focus:true, group:"上週", listTime:"星期五", subj:SUBJ, replied:true, msgs:[
+  {id:2, focus:true, group:"今天", listTime:"上午 9:12", subj:"Q4 日本客戶拜訪名單確認", unread:true, msgs:[
+    {from:CHEN, to:"Su Fang Yi", time:"10/12（週一）18:40", body:["Sue 你好，","附上 Q4 日本客戶拜訪名單草稿，共 8 家。麻煩幫忙確認優先順序，特別是兩家新接觸的 Tier-2 客戶。","若週四前能回覆，我就可以先跟業務端排行程。","謝謝！\n怡君"], attach:["Q4_visit_list.xlsx"]},
+    {from:ME, to:"陳 怡君", time:"10/15（週四）11:20", body:["怡君好，","名單已確認，優先順序標在附件的 C 欄。","兩家 Tier-2 建議排在後半週，第一次拜訪先請 FAE 一起去做技術介紹，比較容易打開話題。","Sue"], attach:["Q4_visit_list_Sue.xlsx"]},
+    {from:CHEN, to:"Su Fang Yi", time:"10/20（週二）09:12", body:["Sue 早，","行程已經跟業務端排好，暫定 11/9–11/13，兩家 Tier-2 依你的建議排在 11/12、11/13，FAE 也確認可以同行。","詳細時段在附件，有需要調整再跟我說。","怡君"], attach:["Q4_visit_schedule_v2.xlsx"]}]},
+  {id:7, focus:true, group:"昨天", listTime:"上午 10:35", subj:"東京客戶樣品寄送確認（11 月拜訪用）", unread:true, msgs:[
+    {from:WANG, to:"Su Fang Yi", time:"10/19（週一）10:35", body:["Sue 你好，","11 月東京拜訪要帶的評估板樣品，預計 10/28 從新竹寄出，需要你確認以下兩點：\n1. 數量是否維持每家 2 片\n2. 規格書要附日文版還是英文版","麻煩週三前回覆，謝謝。","俊傑"]}]},
+  {id:8, focus:true, group:"上週", listTime:"星期五", subj:"新產品發表會（日本場）會後回饋整理", msgs:[
+    {from:LIN, to:"Su Fang Yi；產品行銷團隊", time:"10/16（週五）17:48", body:["各位好，","日本場發表會的回饋整理如下：\n1. 客戶對新一代 PMIC 的效率數據反應很好\n2. 有三家詢問車規版本的時程\n3. 競品比較頁被要求提供更細的測試條件","下週一的週會會再討論後續動作，請先看過附件。","志明"], attach:["JP_launch_feedback.pptx"]}]},
+  {id:9, focus:true, group:"上週", listTime:"星期四", subj:"密碼即將到期通知（剩餘 7 天）", msgs:[
+    {from:IT, to:"Su Fang Yi", time:"10/15（週四）08:00", body:["您好，","您的帳號密碼將於 10/22 到期，請於到期前登入員工入口網站變更密碼。","若已完成變更，請忽略此通知。","IT 服務台"]}]},
+  {id:1, focus:true, group:"更早", listTime:"10/09", subj:SUBJ, replied:true, msgs:[
     {from:ME, to:"yasumoto-masanori-ky@ynu.ac.jp", time:"10/8（週四）14:00", body:B[0],
      attach:["研究計画書（スライド版）","研究計画書（文書版）","履歴書"]},
     {from:Y, to:"Su Fang Yi", time:"10/8（週四）21:56", body:B[1]},
     {from:ME, to:"yasumoto-masanori-ky@ynu.ac.jp", time:"10/8（週四）22:20", body:B[2]},
     {from:Y, to:"Su Fang Yi", time:"10/9（週五）21:12", body:B4}]},
-  {id:3, focus:true, group:"上週", listTime:"星期三", subj:"新產品發表簡報 v3 已上傳", msgs:[
+  {id:3, focus:true, group:"更早", listTime:"10/07", subj:"新產品發表簡報 v3 已上傳", msgs:[
     {from:LIN, to:"Su Fang Yi；產品行銷團隊", time:"10/7（週三）15:22", body:["各位好，","簡報第三版已上傳到共用資料夾，主要修改：\n1. 競品比較頁更新為最新規格\n2. 日本市場頁補上兩個導入案例","請在週五前留言回饋。","志明"]}]},
-  {id:4, focus:true, group:"上個月", listTime:"2026/09/28", subj:"系統維護通知：10/3（六）02:00–06:00", msgs:[
+  {id:4, focus:true, group:"更早", listTime:"09/28", subj:"系統維護通知：10/3（六）02:00–06:00", msgs:[
     {from:IT, to:"全體同仁", time:"9/28（週一）09:00", body:["各位同仁好，","本週六凌晨將進行郵件伺服器例行維護，期間無法收發郵件。如有緊急事務請改用電話聯繫。","IT 服務台"]}]},
-  {id:5, focus:false, group:"上週", listTime:"星期六", subj:"秋季京都・金澤 5 日遊早鳥優惠開跑", unread:true, msgs:[
+  {id:10, focus:false, group:"昨天", listTime:"下午 6:00", subj:"【明天開講】半導體供應鏈趨勢線上講座 連結通知", unread:true, msgs:[
+    {from:SEM, to:"Su Fang Yi", time:"10/19（週一）18:00", body:["您好，","您報名的「半導體供應鏈趨勢與企業協作」線上講座將於明天舉行。","日期：10/20（週二）19:30–21:00\n入場連結：請由報名系統「我的活動」頁面進入（開講前 15 分鐘開放）","此為系統自動發送郵件，請勿直接回覆。"]}]},
+  {id:11, focus:false, group:"上週", listTime:"星期六", subj:"紅葉速報：京都・嵐山 本週轉紅 3 成", unread:true, msgs:[
+    {from:NEWS, to:"Su Fang Yi", time:"10/17（週六）10:00", body:["Sue 您好，","京都嵐山、東福寺的楓葉已開始轉紅，預計 11 月中旬進入最佳觀賞期。","早鳥優惠倒數中，10/31 前預訂秋季行程享九折。","如不想再收到本電子報，可於會員頁面取消訂閱。"]}]},
+  {id:5, focus:false, group:"更早", listTime:"10/10", subj:"秋季京都・金澤 5 日遊早鳥優惠開跑", msgs:[
     {from:NEWS, to:"Su Fang Yi", time:"10/10（週六）10:00", body:["Sue 您好，","秋季楓葉行程早鳥優惠已開放報名，10/31 前預訂享九折。","本期精選：京都嵐山、金澤兼六園、白川鄉合掌村。","如不想再收到本電子報，可於會員頁面取消訂閱。"]}]},
-  {id:6, focus:false, group:"上個月", listTime:"2026/09/30", subj:"報名成功：半導體供應鏈趨勢線上講座", msgs:[
+  {id:6, focus:false, group:"更早", listTime:"09/30", subj:"報名成功：半導體供應鏈趨勢線上講座", msgs:[
     {from:SEM, to:"Su Fang Yi", time:"9/30（週三）12:05", body:["您好，","您已成功報名「半導體供應鏈趨勢與企業協作」線上講座。","日期：10/20（週二）19:30–21:00\n連結將於講座前一天寄出。","此為系統自動發送郵件，請勿直接回覆。"]}]}
 ];
 const $ = id => document.getElementById(id);
@@ -236,8 +231,9 @@ $("tabFocus").onclick = () => setTab("focus");
 $("tabOther").onclick = () => setTab("other");
 function setTab(t){ tab=t; $("tabFocus").classList.toggle("on",t==="focus"); $("tabOther").classList.toggle("on",t==="other");
   $("tabFocus").setAttribute("aria-selected",t==="focus"); $("tabOther").setAttribute("aria-selected",t==="other"); renderList(); }
+let tt; function toast(s){ const t=$("toast"); t.textContent=s; t.hidden=false; clearTimeout(tt); tt=setTimeout(()=>t.hidden=true,1600); }
+document.querySelectorAll(".soon,.fab,.filter,.icon-btn[aria-label='通知'],.icon-btn[aria-label='搜尋'],.icon-btn[aria-label='更多']").forEach(b=>b.addEventListener("click",()=>toast("這個版本只提供閱讀郵件")));
 renderList();
 </script>
 
-</body>
-</html>
+</body></html>
